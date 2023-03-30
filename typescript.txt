@@ -1,0 +1,132 @@
+Typescript - NestJs
+
+The dist folder is where all the code will be transpilled
+
+The module is how the Dependency Injection works in NestJs
+The controller and services specified on the module defines how depenendet of those modules the application is
+There is also modules that are depedant on other modules
+We need modules to isolate logic and split it 
+
+
+services
+just like other applications ,this holds the business logic
+Services can also be shared between other modules, thats why it is a good practice to have business logic in here and 
+not somewhere else
+
+database
+we are using TypeORM as the ORM layer
+we have to create a file called ormconfig.ts which will hold the system configuration
+
+Everytime we see something with the method forRoor, this means we can provide some configuration to that module/class
+
+Entity
+This is repesentation of the table, which is closest to the Model in Laravel or the Entity itself in SpringBoot
+
+Repository
+Layer that interacts with the database. It has the DB method. It is Generic (polymorphic), therefore it can receive other formats 
+formats, such as the Entities types
+
+The @InjectRepository class is used for injecting some repository depedency into a service class
+
+constructor(@InjectRepository(TagEntity) private readonly tagRepository: Repository<TagEntity>){}
+This all in the constructor says that this service class is depending on the TagRepository and creates a 
+variable from the type Repository in the format of TagRepository
+
+forRoot > used inside the AppModule or for specifying a module use on the entire application
+forFeature > used inside logic modules because we want to use the import only there
+
+The good priactices says that it is better to use Migrations rather than synchronize true. Altough it is a bad practice for production.
+The migrations script has been modified because the cli argument on the typeorm.config.ts was presenting syntax errors.
+
+npm run typeorm migration:create ./src/migrations/CreateTagsTable
+npm run typeorm migration:run
+
+The @Injectable() annotation means that the class can be used as a dependency somewhere else
+
+When some Controller or Service or something is missing on the main domain module, the api will return a 404 error
+
+readonly properties define properties that cannot be changed
+
+Salt > in the hashing algorithm this means how many times the password will be encrypted
+
+@BeforeInsert() > This annotation runs its functions before the values are inserted into the DB 
+
+Object.assign(newUser, createUserDto) > As the signature suggests, this function creates assigns the values of an object to a certain one
+
+export interface UserResponseInterface{
+    user: UserEntity & { token: string }
+}
+This is an advanced features of Typescript for merging properties that dont want to be seen from the entity itself
+In this case, we are including the token property on the interface, and that wont be seen on the entity, but for the classes
+that use that implement that interface, this will be mandatory
+In TS this is what is called 'Merging types', in this case, two type into one
+
+We can create new types and modifying them as we wish by using the type class. This for example allowed us to hide the
+hashPassword from the UserEntity by using the advanced TS function Ommit, as follows
+export type UserType = Omit<UserEntity, 'hashPassword'>
+
+Pipes 
+Are used to validate data that are passed through to the controller 
+@UsePipes() > this ensures that the controller will use a pipe to validate data
+The validations then can be added inside the Class validation that is giving the type of the request that comes 
+from the body, which means the DTO
+
+const userByEmail = await this.userRepository.findOne({
+            email: createUserDto.email
+        })
+The findOne function queries the DB by some predicate, which means it expects a paremeter to refer as a column and its values
+to compare
+
+bcrypt.compare > ready function that compares encrypted password 
+
+Req() > we use this decorator when we want to have the entire request and not only the input payload 
+
+@Injectable() > This has to be present on services and Middlewares. It is really hard to debuging and demands toms extra attention
+
+New Decorators > As per the example on the user decorator, it is a sugar for working confortably with requests
+
+export const User = createParamDecorator((data: any, ctx: ExecutionContext) => {
+    return 'Fooo'
+})
+In this decorator, on the two parameters, the data is the data that come as default when user, which comes from the request, such as
+name or id. If it comes empty it will be then undefined. 
+The context is the requests it self. We can use functions that take the http incoming request data using the context functions
+Most of the times, decorator is used when you dont want to have some extensive and repeatable logic on the controller
+
+The Guards works between the client side and route, which means it protected certain routes, whereas the Middleware works after the 
+the route is already executed and before the request arrives on the container
+Altough Middlewares are more flexible and can make the same function as the guards, the good practice is to mantain the Guards for 
+protecting purposes. The Guards in Nest.js have a CanActivate function, which doesnt exist for the Middlewares
+
+@OneToMany(() => ArticleEntity, (article) => article.author)
+articles: ArticleEntity[] 
+On the relationship mentioned above, we are on the user class. The code above creates a relation one to many, which means 
+a user can have many articles, in which its property article will be an array of ArticleEntity objects 
+On the other side, the Article Entity will have a author property, which will then bring the other side of the one to many to its belonged
+user
+
+By default, consults on the DB dont come with its relation. We then need to specify that we want an eager loading of 
+the object to be brought when the object is queried from the DB:
+
+@Query > This object takes as an object the query string that comes from the url, differently than the @Parameter which uses the proper route, 
+the query will only for the query string 
+
+const user = await this.articleRepository.findOne(currentUserId, {
+    relations: ['favorites']
+})
+When the relations clausle is added to the orm query this means that we want to eager load the relations which doesnt usually
+come by default when the query is started
+
+const ormseedcconfig = {
+    ...ormconfig,
+    migrations: ['src/seeds/*.ts']
+}
+This functionality with spread operator, takes all the already existing properties which are on the ormconfig and overites 
+as you wish
+
+
+
+
+
+
+
